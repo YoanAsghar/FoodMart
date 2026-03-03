@@ -23,7 +23,7 @@
 
   var initSwiper = function() {
 
-    var swiper = new Swiper(".main-swiper", {
+    var swiper = new swiper(".main-swiper", {
       speed: 500,
       pagination: {
         el: ".swiper-pagination",

@@ -1,0 +1,38 @@
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# ASP.NET files
+app_offline.htm
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# Visual Studio files
+.vs/
+*.njsproj
+*.sln
+*.swp
+
+# Rider files
+.idea/
+
+# Secrets
+secrets.json
+appsettings.*.json
+!appsettings.Development.json
