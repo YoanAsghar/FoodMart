@@ -6,7 +6,7 @@
   - Ensure `Program.cs` is set up for Minimal APIs. (No `AddControllers` or `MapControllers`).
   - Configure a CORS policy to allow requests from the frontend development server.
 
-- [ ] **Setup Database Models:**
+- [X] **Setup Database Models:**
   - Create a `Product` model class (e.g., in a `Models` folder) with properties like `Id`, `Name`, `Description`, `Price`, `ImageUrl`, `Category`.
   - Create a `Category` model class (`Id`, `Name`).
   - Create `Order`, `OrderDetail`, and `ShoppingCartItem` models.
@@ -38,7 +38,7 @@
 
 ## Phase 4: API - Public Storefront
 
-- [ ] **Add Public Product Endpoints:**
+- [X] **Add Public Product Endpoints:**
   - Map public endpoints that do not require authorization.
   - `GET /api/products` endpoint to fetch a list of all products.
   - `GET /api/products/{id}` endpoint to fetch a single product by its ID.
