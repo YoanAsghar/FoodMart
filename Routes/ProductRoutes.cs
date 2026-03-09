@@ -42,6 +42,68 @@ namespace Restaurant_Application.Routes
                     return Results.Problem("Error retrieving the product");
                 }
             }).WithTags("Products");
+
+            Group.MapPost("/", async (ApplicationDbContext db, [FromBody] Product product) =>
+            {
+                try
+                {
+
+                    db.Products.Add(product);
+                    await db.SaveChangesAsync();
+
+                    return Results.Ok(product);
+                }
+                catch (Exception ex)
+                {
+                    return Results.Conflict(ex);
+                }
+            }).WithTags("Products");
+
+            Group.MapPut("/{id}", async (ApplicationDbContext db, int id, [FromBody] Product product) =>
+                    {
+                        try
+                        {
+                            var ExistingProduct = await db.Products.FirstOrDefaultAsync(c => c.Id == id);
+                            if (ExistingProduct == null)
+                            {
+                                return Results.NotFound();
+                            }
+
+                            ExistingProduct.Name = product.Name;
+                            ExistingProduct.Price = product.Price;
+                            ExistingProduct.Description = product.Description;
+                            ExistingProduct.ImageUrl = product.ImageUrl;
+
+                            await db.SaveChangesAsync();
+                            return Results.Ok(ExistingProduct);
+                        }
+                        catch (Exception ex)
+                        {
+                            return Results.Conflict(ex);
+                        }
+                    }).WithTags("Products");
+
+            Group.MapDelete("/{id}", async (int id, ApplicationDbContext db) =>
+            {
+                try
+                {
+                    var ProductToDelete = await db.Products.FirstOrDefaultAsync(c => c.Id == id);
+                    if (ProductToDelete == null)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    db.Products.Remove(ProductToDelete);
+                    await db.SaveChangesAsync();
+
+                    return Results.Ok(ProductToDelete);
+
+                }
+                catch (Exception ex)
+                {
+                    return Results.Conflict(ex);
+                }
+            }).WithTags("Products");
         }
     }
 }

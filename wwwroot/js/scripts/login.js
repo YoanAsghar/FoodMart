@@ -3,18 +3,31 @@ const EMAIL = document.getElementById("email");
 const PASSWORD = document.getElementById("password");
 
 
-if(localStorage.getItem("jwt_token")){
-  document.getElementById("content").removeAttribute("hidden")
-  document.getElementById("login-section").setAttribute("hidden", true)
+async function verifyAuthentication(){
+  const token = localStorage.getItem("jwt_token");
+  if(!token){ return }
+
+  const response = await fetch("http://localhost:5183/api/auth/verify", {
+    headers: {"Authorization": `Bearer ${token}`}
+  })
+
+  console.log(response);
+
+  if(!response.ok){
+    localStorage.removeItem("jwt_token");
+    return
+  }
+
+  document.getElementById("login-section").setAttribute("hidden", "true");
+  document.getElementById("content").removeAttribute("hidden");
 }
-
-
 function getDataFromLoginForm(){
   return {
     email: EMAIL.value,
     passwordHash: PASSWORD.value
   }
 }
+verifyAuthentication();
 
 LOGIN_FORM.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -33,6 +46,7 @@ LOGIN_FORM.addEventListener("submit", async (event) => {
       const data = await response.json();
       localStorage.setItem("jwt_token", data.token)
       document.getElementById("content").removeAttribute("hidden")
+      document.getElementById("login-section").setAttribute("hidden", "true");
 
       return
     }

@@ -15,11 +15,11 @@
 
 ## Phase 2: API - User Authentication and Roles
 
-- [ ] **Configure Identity for API:**
+- [X] **Configure Identity for API:**
   - Set up ASP.NET Core Identity to use token-based authentication (e.g., JWT) instead of cookies.
   - Add and configure JWT bearer authentication services.
 
-- [ ] **Create Authentication Endpoints:**
+- [X] **Create Authentication Endpoints:**
   - In `Program.cs` or a dedicated routes file, map the authentication endpoints.
   - Map a `POST /api/register` endpoint to create a new user.
   - Map a `POST /api/login` endpoint to authenticate a user and return a JWT.

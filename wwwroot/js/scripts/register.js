@@ -11,7 +11,6 @@ const CONFIRM_PASSWORD = document.getElementById("confirmPassword");
 const FORM_CHECK_LABEL = document.querySelector("form-check-label");
 const FORM_ERROR = document.querySelector("form-registration-error");
 
-
 REGISTER_FORM.addEventListener("submit", async (event) => {
   event.preventDefault();
   const userInformation = getRegisterFormData();
@@ -26,7 +25,9 @@ REGISTER_FORM.addEventListener("submit", async (event) => {
     })
 
     if(response.ok){
-      alert("User correctly created")
+      const data = await response.json();
+      localStorage.setItem("jwt_token", data.token)
+      location.href = "http://localhost:5183/"
       return;
     }
     else{
@@ -38,6 +39,7 @@ REGISTER_FORM.addEventListener("submit", async (event) => {
     return err
   }
 });
+
 
 function getRegisterFormData(){
 

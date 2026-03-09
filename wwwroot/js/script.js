@@ -22,7 +22,7 @@
 	}
 
   var initSwiper = function() {
-
+    
     var swiper = new swiper(".main-swiper", {
       speed: 500,
       pagination: {
@@ -31,7 +31,7 @@
       },
     });
 
-    var category_swiper = new Swiper(".category-carousel", {
+    var category_swiper = new swiper(".category-carousel", {
       slidesPerView: 6,
       spaceBetween: 30,
       speed: 500,
@@ -55,7 +55,7 @@
       }
     });
 
-    var brand_swiper = new Swiper(".brand-carousel", {
+    var brand_swiper = new swiper(".brand-carousel", {
       slidesPerView: 4,
       spaceBetween: 30,
       speed: 500,
@@ -79,7 +79,7 @@
       }
     });
 
-    var products_swiper = new Swiper(".products-carousel", {
+    var products_swiper = new swiper(".products-carousel", {
       slidesPerView: 5,
       spaceBetween: 30,
       speed: 500,
