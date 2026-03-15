@@ -32,7 +32,6 @@ async function verifyToken() {
         }
 
     } catch (error) {
-        console.error('Error verifying token:', error);
         localStorage.removeItem("jwt_token");
         if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
             window.location.href = "/";

@@ -13,41 +13,54 @@ namespace Restaurant_Application.Routes
         {
             var Group = app.MapGroup("/api/products");
 
-            Group.MapGet("/", async (ApplicationDbContext db) =>
+            Group.MapGet("/", async (ApplicationDbContext db, [FromQuery] int PageSize = 20, [FromQuery] int Page = 1) =>
             {
                 try
                 {
-                    var Products = await db.Products.ToListAsync();
-                    return Results.Ok(Products);
+                    var Size = (Page - 1) * PageSize;
+                    var Products = await db.Products
+                    .OrderBy(o => o.Id)
+                    .Skip(Size)
+                    .Take(PageSize)
+                    .ToListAsync();
+
+
+                    var Response = new
+                    {
+                        TotalOrders = await db.Products.CountAsync(),
+                        PageNumber = Page,
+                        PageSize = PageSize,
+                        Data = Products
+                    };
+                    return Results.Ok(Response);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    return Results.Conflict("Error retrieving products");
+                    return Results.Conflict("Error retrieving products" + ex);
                 }
             }).WithTags("Products");
             Group.MapGet("/{id}", async (ApplicationDbContext db, int id) =>
-            {
-                try
                 {
-                    var Product = await db.Products.FirstOrDefaultAsync(c => c.Id == id);
-                    if (Product == null)
+                    try
                     {
-                        return Results.NotFound($"Product with id {id} not found");
-                    }
+                        var Product = await db.Products.FirstOrDefaultAsync(c => c.Id == id);
+                        if (Product == null)
+                        {
+                            return Results.NotFound($"Product with id {id} not found");
+                        }
 
-                    return Results.Ok(Product);
-                }
-                catch (System.Exception)
-                {
-                    return Results.Problem("Error retrieving the product");
-                }
-            }).WithTags("Products");
+                        return Results.Ok(Product);
+                    }
+                    catch (System.Exception)
+                    {
+                        return Results.Problem("Error retrieving the product");
+                    }
+                }).WithTags("Products");
 
             Group.MapPost("/", async (ApplicationDbContext db, [FromBody] Product product) =>
             {
                 try
                 {
-
                     db.Products.Add(product);
                     await db.SaveChangesAsync();
 
@@ -57,7 +70,7 @@ namespace Restaurant_Application.Routes
                 {
                     return Results.Conflict(ex);
                 }
-            }).WithTags("Products");
+            }).WithTags("Products").RequireAuthorization("AdminOnly");
 
             Group.MapPut("/{id}", async (ApplicationDbContext db, int id, [FromBody] Product product) =>
                     {
@@ -81,7 +94,7 @@ namespace Restaurant_Application.Routes
                         {
                             return Results.Conflict(ex);
                         }
-                    }).WithTags("Products");
+                    }).WithTags("Products").RequireAuthorization("AdminOnly");
 
             Group.MapDelete("/{id}", async (int id, ApplicationDbContext db) =>
             {
@@ -103,7 +116,7 @@ namespace Restaurant_Application.Routes
                 {
                     return Results.Conflict(ex);
                 }
-            }).WithTags("Products");
+            }).WithTags("Products").RequireAuthorization("AdminOnly");
         }
     }
 }

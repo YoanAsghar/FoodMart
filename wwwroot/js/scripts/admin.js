@@ -5,23 +5,28 @@ const PRODUCTS_TABLE = document.getElementById("products-table");
 
 async function getAllProductsFromDB(){
   try{
-    const response = await fetch("http://localhost:5183/api/products")
+    const response = await fetch("http://localhost:5183/api/products?PageSize=20&Page=1")
     if(!response.ok) throw new Error("Error getting products");
-    return await response.json();
+    const responseData = await response.json();
+    return responseData.data;
   }catch(err){
     console.log(err);
     return null;
   }
 }
 
+let editingProductId = null;
+
 async function renderProducts() {
     const products = await getAllProductsFromDB();
     const PRODUCTS_TABLE_BODY = document.querySelector("#products-table tbody");
 
-    if (!products || !Array.isArray(products)) return;
+    if (!products || !Array.isArray(products) || products.length === 0) {
+        PRODUCTS_TABLE_BODY.innerHTML = '<tr><td colspan="5">No products found.</td></tr>';
+        return;
+    }
 
     PRODUCTS_TABLE_BODY.innerHTML = "";
-
     for (let i = 0; i < products.length; i++) {
         const product = products[i];
         const row = `
@@ -29,104 +34,282 @@ async function renderProducts() {
                 <td>${i + 1}</td>
                 <td>${product.name}</td>
                 <td>${product.category}</td>
-                <td>$${product.price}</td>
+                <td>$${product.price.toFixed(2)}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-secondary" id="edit-button-${product.id}">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" id="delete-button-${product.id}">Delete</button>
+                    <button class="btn btn-sm btn-outline-secondary edit-button" data-product-id="${product.id}">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger delete-button" data-product-id="${product.id}">Delete</button>
                 </td>
             </tr>
         `;
         PRODUCTS_TABLE_BODY.innerHTML += row;
     }
     
-    // Once rendered, we activate the buttons
-    AddDeleteFunctionToTheButtons(products);
+    AddEditFunctionToTheButtons(products);
+    AddDeleteFunctionToTheButtons();
 }
 
-async function AddDeleteFunctionToTheButtons(products){
-  if (!products) return;
-  
-  for(let i = 0; i < products.length; i++){
-    const product = products[i];
-    const delete_button = document.getElementById(`delete-button-${product.id}`);
+function AddEditFunctionToTheButtons(products) {
+    const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+    const modalTitle = document.getElementById('productModalLabel');
+    const productNameInput = document.getElementById("product-name");
+    const productCategoryInput = document.getElementById("product-category");
+    const productPriceInput = document.getElementById("product-price");
+    const productDescriptionInput = document.getElementById("product-description");
+    const productImageInput = document.getElementById("product-image");
 
-    if (delete_button) {
-        delete_button.addEventListener("click", async () => {
-          if(!confirm("Are you sure?")) return;
-          
-          try{
-            const response = await fetch(`http://localhost:5183/api/products/${product.id}`,{
-              method: "DELETE",
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem("jwt_token")}`
-              }
-            })
-            if(!response.ok){
-              console.log(response);
-              return
+    document.querySelectorAll(".edit-button").forEach(button => {
+        button.addEventListener("click", (e) => {
+            const productId = e.currentTarget.getAttribute('data-product-id');
+            const product = products.find(p => p.id == productId);
+
+            if (product) {
+                editingProductId = product.id;
+                
+                modalTitle.textContent = `Edit Product: ${product.name}`;
+                productNameInput.value = product.name;
+                productCategoryInput.value = product.category;
+                productPriceInput.value = product.price;
+                productDescriptionInput.value = product.description;
+                productImageInput.value = product.imageUrl;
+
+                productModal.show();
             }
-            const rowToRemove = document.getElementById(`product${product.id}`);
-            if (rowToRemove) rowToRemove.remove();
-          }catch(err){
-            console.log(err)
-          }
-        })
-    }
+        });
+    });
+}
+
+function AddDeleteFunctionToTheButtons(){
+  document.querySelectorAll('.delete-button').forEach(button => {
+    button.addEventListener("click", async (e) => {
+      if(!confirm("Are you sure you want to delete this product?")) return;
+      
+      const productId = e.currentTarget.getAttribute('data-product-id');
+
+      try {
+        const response = await fetch(`http://localhost:5183/api/products/${productId}`, {
+          method: "DELETE",
+          headers: { 'Authorization': `Bearer ${localStorage.getItem("jwt_token")}` }
+        });
+
+        if(!response.ok) {
+          throw new Error('Failed to delete product.');
+        }
+        
+        document.getElementById(`product${productId}`)?.remove();
+
+      } catch(err) {
+        console.error(err);
+        alert('Error deleting product.');
+      }
+    });
+  });
+}
+
+async function setupProductForm() {
+    const productForm = document.getElementById("product-form");
+    const productModal = document.getElementById('productModal');
+    const modal = bootstrap.Modal.getInstance(productModal) || new bootstrap.Modal(productModal);
+
+    productForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const productData = {
+            name: document.getElementById("product-name").value,
+            description: document.getElementById("product-description").value,
+            price: parseFloat(document.getElementById("product-price").value),
+            imageUrl: document.getElementById("product-image").value,
+            category: document.getElementById("product-category").value
+        };
+
+        if (editingProductId) {
+            productData.id = editingProductId;
+        }
+
+        const method = editingProductId ? "PUT" : "POST";
+        const url = editingProductId 
+            ? `http://localhost:5183/api/products/${editingProductId}`
+            : "http://localhost:5183/api/products";
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwt_token")}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(productData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save product.');
+            }
+
+            modal.hide();
+            location.reload();
+
+        } catch (err) {
+            console.error("Error saving product:", err);
+            alert(`Error saving product: ${err.message}`);
+        }
+    });
+
+    productModal.addEventListener('hidden.bs.modal', () => {
+        editingProductId = null;
+        productForm.reset();
+        document.getElementById('productModalLabel').textContent = "Add/Edit Product";
+    });
+}
+
+//
+//Orders
+//
+
+async function getAllOrdersFromDB(){
+  try{
+    const response = await fetch("http://localhost:5183/api/orders?PageSize=20&Page=1", {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem("jwt_token")}`
+      }
+    })
+    if(!response.ok) throw new Error("Error getting orders");
+    const responseData = await response.json();
+    return responseData;
+  }catch(err){
+    console.log("Endpoint not ready: " + err);
+    return null;
   }
 }
 
+async function renderOrders() {
+    const orders = await getAllOrdersFromDB();
+    const ORDERS_TABLE_BODY = document.querySelector("#orders-table tbody");
+
+    if (!orders || !Array.isArray(orders)) return;
+
+    ORDERS_TABLE_BODY.innerHTML = "";
+
+    for (let i = 0; i < orders.length; i++) {
+        const order = orders[i];
+        const row = `
+            <tr>
+                <td>${order.orderId}</td>
+                <td>${order.user.userName}</td>
+                <td>${new Date(order.orderDate).toLocaleDateString()}</td>
+                <td>$${order.orderTotal.toFixed(2)}</td>
+                <td><span class="badge bg-info">${order.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary">Details</button>
+                </td>
+            </tr>
+        `;
+        ORDERS_TABLE_BODY.innerHTML += row;
+    }
+}
+
 //
-//Create a new product
+//Customers
 //
 
-async function setupCreateProductForm(){
-  const newProductForm = document.getElementById("product-form");
-  const product_name = document.getElementById("product-name");
-  const product_category = document.getElementById("product-category");
-  const product_price = document.getElementById("product-price");
-  const product_description = document.getElementById("product-description");
-  const product_image = document.getElementById("product-image");
+async function getAllCustomersFromDB(){
+  try{
+    const response = await fetch("http://localhost:5183/api/users", {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem("jwt_token")}`
+      }
+    })
+    if(!response.ok) {
+        console.error(`HTTP error! status: ${response.status}`);
+        try {
+            const errorBody = await response.text();
+            console.error(`Error body: ${errorBody}`);
+        } catch(e) {}
+        throw new Error(`Error getting customers: ${response.status}`);
+    }
+    return await response.json();
+  }catch(err){
+    console.error("Error fetching customers:", err);
+    return null;
+  }
+}
 
-  if (!newProductForm) return;
+async function renderCustomers() {
+    const customers = await getAllCustomersFromDB();
+    const CUSTOMERS_TABLE_BODY = document.querySelector("#customers-table tbody");
 
-  newProductForm.addEventListener("submit", async (e) => {
-    e.preventDefault(); // Prevent page reload
+    if (!CUSTOMERS_TABLE_BODY) return;
 
-    const newProduct = {
-        name: product_name.value,
-        description: product_description.value,
-        price: parseFloat(product_price.value),
-        imageUrl: product_image.value,
-        category: product_category.value
+    if (!customers || !Array.isArray(customers) || customers.length === 0) {
+        CUSTOMERS_TABLE_BODY.innerHTML = '<tr><td colspan="5" class="text-center">No customers found.</td></tr>';
+        return;
+    }
+
+    CUSTOMERS_TABLE_BODY.innerHTML = "";
+
+    customers.forEach(customer => {
+        const row = `
+            <tr>
+                <td>${customer.id.substring(0, 8)}...</td>
+                <td>${customer.userName || 'N/A'}</td>
+                <td>${customer.email}</td>
+                <td>${new Date(customer.registerDate).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary">View Orders</button>
+                </td>
+            </tr>
+        `;
+        CUSTOMERS_TABLE_BODY.innerHTML += row;
+    });
+}
+
+//
+// Tab switching logic for Admin Dashboard
+//
+function setupTabSwitching() {
+    const links = {
+        products: document.getElementById('products-link'),
+        orders: document.getElementById('orders-link'),
+        customers: document.getElementById('customers-link'),
     };
 
-    try{
-      const response = await fetch("http://localhost:5183/api/products", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("jwt_token")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newProduct),
-      });
+    const sections = {
+        products: document.getElementById('products-section'),
+        orders: document.getElementById('orders-section'),
+        customers: document.getElementById('customers-section'),
+    };
 
-      if(!response.ok){
-        const errorData = await response.json();
-        console.error("Error from server:", errorData);
-        alert("Error creating product. Check console.");
-        return;
-      }
+    function switchTab(tab) {
+        // Deactivate all links and sections
+        for (const key in links) {
+            links[key].classList.remove('active');
+            sections[key].classList.remove('active');
+        }
 
-      alert("Product created successfully!");
-      location.reload(); 
-
-    }catch(err){
-      console.error("Network or unexpected error:", err);
+        // Activate the selected tab
+        links[tab].classList.add('active');
+        sections[tab].classList.add('active');
     }
-  });
+
+    links.products.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('products');
+    });
+
+    links.orders.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('orders');
+    });
+
+    links.customers.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('customers');
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     renderProducts();
-    setupCreateProductForm();
+    renderOrders();
+    renderCustomers();
+    setupProductForm();
+    setupTabSwitching();
 });

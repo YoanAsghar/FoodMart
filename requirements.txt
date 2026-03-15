@@ -24,14 +24,14 @@
   - Map a `POST /api/register` endpoint to create a new user.
   - Map a `POST /api/login` endpoint to authenticate a user and return a JWT.
 
-- [ ] **Seed Admin User and Roles:**
-  - Create an "Admin" and "Customer" role programmatically.
-  - Write a database seeding utility to create an initial admin user and assign the "Admin" role.
+- [X] **Seed Admin User and Roles:**
+  - Create an "Admin" and "Customer" role programmatically (via logic).
+  - Implement logic to assign the "Admin" role to the first registered user.
 
 ## Phase 3: API - Admin Product Management
 
 - [X] **Create Admin Product Endpoints:**
-  - Map admin-only endpoints, securing them with `.RequireAuthorization("Admin")`.
+  - Map admin-only endpoints, securing them with `.RequireAuthorization("AdminOnly")`.
   - `POST /api/products` endpoint for creating a new product.
   - `PUT /api/products/{id}` endpoint for updating an existing product.
   - `DELETE /api/products/{id}` endpoint for deleting a product.
@@ -45,11 +45,11 @@
 
 ## Phase 5: API - Shopping Cart and First-Purchase Discount
 
-- [ ] **Create Cart Endpoints:**
+- [X] **Create Cart Endpoints:**
   - Map cart endpoints, securing them for authorized customers.
   - `GET /api/cart` endpoint to get the current user's cart.
-  - `POST /api/cart/items` endpoint to add an item to the cart.
-  - `DELETE /api/cart/items/{itemId}` to remove an item from the cart.
+  - `POST /api/cart` endpoint to add an item to the cart.
+  - `DELETE /api/cart/{cartItemId}` to remove an item from the cart.
 
 - [ ] **Implement Discount Logic:**
   - When a user registers, set a flag on their user profile (e.g., `IsFirstPurchase = true`).
@@ -58,16 +58,16 @@
 
 ## Phase 6: API - Newsletter and Emailing
 
-- [ ] **Create Newsletter Endpoints:**
-  - Map a public `POST /api/newsletter/subscribe` endpoint that accepts an email address.
-  - The endpoint should save the email to a `NewsletterSubscriptions` table.
+- [X] **Create Newsletter Endpoints:**
+  - Map a public `POST /api/users/subscribe` endpoint that accepts an email address.
+  - The endpoint saves the email and name and sends a confirmation.
 
-- [ ] **Implement Email Service:**
-  - Configure an email sending service (e.g., SendGrid, MailKit) and an `IEmailSender` implementation.
+- [X] **Implement Email Service:**
+  - Configure an email sending service (MailKit) and an `IEmailSender` implementation.
   - Use the service to send a "Thank you for subscribing" email from the `/subscribe` endpoint.
 
 ## Phase 7: API - Order and Sales Management
 
 - [ ] **Create Order Endpoints:**
   - Map an `POST /api/orders/checkout` endpoint (authorized) that creates an `Order` and `OrderDetail` record from the user's cart and then clears the cart. This is where the `IsFirstPurchase` flag gets updated.
-  - Map a `GET /api/orders` endpoint (authorized for Admins) to list all historical orders for the sales management dashboard.
+  - [X] Map a `GET /api/orders` endpoint (authorized for Admins) to list all historical orders for the sales management dashboard.

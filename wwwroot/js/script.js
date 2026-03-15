@@ -1,3 +1,4 @@
+//Swiper
 (function($) {
 
   "use strict";

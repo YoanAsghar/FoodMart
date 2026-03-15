@@ -56,10 +56,11 @@ namespace Restaurant_Application.Routes
                         {
                             return Results.BadRequest("User already exists");
                         }
+                        var isFirst = !await db.Users.AnyAsync();
+                        user.Role = isFirst ? "Admin" : "User";
 
                         user.RegisterDate = DateTime.UtcNow;
                         user.PasswordHash = passwordHash.HashPassword(user, user.PasswordHash);
-                        user.Role = "User";
 
                         db.Users.Add(user);
                         await db.SaveChangesAsync();

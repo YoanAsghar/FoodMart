@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -103,5 +104,8 @@ app.UseAuthorization();
 //Endpoints
 ProductRoutes.MapProductRoutes(app);
 AuthRoutes.MapAuthRoutes(app);
+OrderRoutes.MapOrderRoutes(app);
+CartRoutes.MapCartRoutes(app);
+UserRoutes.MapUserRoutes(app, builder.Configuration);
 
 app.Run();

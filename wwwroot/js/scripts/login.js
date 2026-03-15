@@ -11,7 +11,6 @@ async function verifyAuthentication(){
     headers: {"Authorization": `Bearer ${token}`}
   })
 
-  console.log(response);
 
   if(!response.ok){
     localStorage.removeItem("jwt_token");
@@ -53,4 +52,8 @@ LOGIN_FORM.addEventListener("submit", async (event) => {
   }catch(err){
     return "Error found" + err
   }
+})
+
+document.addEventListener("DOMContentLoaded", () => {
+  verifyAuthentication()
 })
