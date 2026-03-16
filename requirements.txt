@@ -51,7 +51,7 @@
   - `POST /api/cart` endpoint to add an item to the cart.
   - `DELETE /api/cart/{cartItemId}` to remove an item from the cart.
 
-- [ ] **Implement Discount Logic:**
+- [X] **Implement Discount Logic:**
   - When a user registers, set a flag on their user profile (e.g., `IsFirstPurchase = true`).
   - The `GET /api/cart` endpoint logic should check this flag and apply a discount to the total if applicable.
   - The checkout process will be responsible for flipping this flag to `false`.

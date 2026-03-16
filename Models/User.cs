@@ -6,4 +6,5 @@ public class User : IdentityUser
 {
     public DateTime RegisterDate { get; set; } = DateTime.UtcNow;
     public string Role { get; set; } = string.Empty;
+    public bool isFirstPurchase { get; set; } = true;
 }

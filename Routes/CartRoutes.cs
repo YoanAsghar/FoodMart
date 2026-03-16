@@ -30,20 +30,32 @@ namespace Restaurant_Application.Routes
                     {
                         return Results.Unauthorized();
                     }
+                    var DbUser = await db.Users.FindAsync(userId);
+
+                    //Check for first buy
+                    bool isFirst = DbUser?.isFirstPurchase ?? false;
+
 
                     //Find the cart of the specific user
-                    var Cart = await db.Carts
+                    var cart = await db.Carts
                     .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.Product)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.UserId == userId);
 
-                    if (Cart == null)
+                    if (cart != null && isFirst)
                     {
-                        return Results.Ok(new { message = "Cart is empty" });
+                        foreach (var item in cart.CartItems)
+                        {
+                            item.Product.Price *= 0.75m;
+                        }
                     }
 
-                    return Results.Ok(Cart);
+                    return Results.Ok(new
+                    {
+                        isFirstPurchase = isFirst,
+                        cart = cart
+                    });
 
                 }
                 catch (Exception ex)

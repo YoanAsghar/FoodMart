@@ -177,6 +177,7 @@ async function getCart() {
         if(!text){
           return null;
         }
+        console.log(text);
         return JSON.parse(text);
     } catch (error) {
         console.error('Failed to fetch cart:', error);
@@ -203,7 +204,10 @@ async function removeCartItem(cartItemId) {
 }
 
 async function renderCartItems() {
-    const cart = await getCart();
+    const cartResponse = await getCart();
+    const cart = cartResponse?.cart;
+    const isFirstPurchase = cartResponse?.isFirstPurchase || false;
+
     const cartContainer = document.querySelector('#offcanvasCart .list-group');
     const cartBadge = document.querySelector('#offcanvasCart .badge');
     const cartTotalElement = document.querySelector('.cart-total');
@@ -250,8 +254,24 @@ async function renderCartItems() {
 
     // Add the total list item
     const totalLi = document.createElement('li');
-    totalLi.className = 'list-group-item d-flex justify-content-between';
-    totalLi.innerHTML = `<span>Total (USD)</span><strong>$${total.toFixed(2)}</strong>`;
+    totalLi.className = 'list-group-item d-flex flex-column';
+    
+    let discountInfo = '';
+    if (isFirstPurchase) {
+        discountInfo = `
+            <div class="text-success text-end mt-1">
+                <small><i class="bi bi-patch-check-fill"></i> ¡Descuento del 25% incluido!</small>
+            </div>
+        `;
+    }
+
+    totalLi.innerHTML = `
+        <div class="d-flex justify-content-between">
+            <span>Total (USD)</span>
+            <strong>$${total.toFixed(2)}</strong>
+        </div>
+        ${discountInfo}
+    `;
     cartContainer.appendChild(totalLi);
 
     // Update badge and cart total in header
