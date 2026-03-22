@@ -1,3 +1,8 @@
+// Global variables
+let isFirstPurchase = false;
+let currentPage = 1;
+let totalProducts = 0;
+
 //
 //Add function to the subscribe button
 //
@@ -54,6 +59,10 @@ async function renderProducts() {
         console.error("Failed to fetch products or data is missing.");
         return;
     }
+
+    currentPage = Response.pageNumber;
+    totalProducts = Response.totalOrders; // Assuming totalOrders is totalProducts
+
     const products = Response.data;
     const productGrid = document.querySelector("#nav-all .product-grid");
 
@@ -125,10 +134,10 @@ function setupProductEventListeners(products) {
 
         if (addToCartBtn) {
             e.preventDefault(); // Prevent link from navigating
-            
+
             const productItem = addToCartBtn.closest('.product-item');
             const quantityInput = productItem.querySelector('.input-number');
-            
+
             const productId = parseInt(addToCartBtn.dataset.productId, 10);
             const quantity = parseInt(quantityInput.value, 10);
 
@@ -220,7 +229,7 @@ async function renderCartItems() {
         cartContainer.innerHTML = '<li class="list-group-item">Your cart is empty.</li>';
         if(cartBadge) cartBadge.textContent = '0';
         if(cartTotalElement) cartTotalElement.textContent = '$0.00';
-        
+
         const totalLi = document.createElement('li');
         totalLi.className = 'list-group-item d-flex justify-content-between';
         totalLi.innerHTML = `<span>Total (USD)</span><strong>$0.00</strong>`;
@@ -250,8 +259,24 @@ async function renderCartItems() {
 
     // Add the total list item
     const totalLi = document.createElement('li');
-    totalLi.className = 'list-group-item d-flex justify-content-between';
-    totalLi.innerHTML = `<span>Total (USD)</span><strong>$${total.toFixed(2)}</strong>`;
+    totalLi.className = 'list-group-item d-flex flex-column';
+
+    let discountInfo = '';
+    if (isFirstPurchase) {
+        discountInfo = `
+            <div class="text-success text-end mt-1">
+                <small><i class="bi bi-patch-check-fill"></i> ¡Descuento del 25% incluido!</small>
+            </div>
+        `;
+    }
+
+    totalLi.innerHTML = `
+        <div class="d-flex justify-content-between">
+            <span>Total (USD)</span>
+            <strong>$${total.toFixed(2)}</strong>
+        </div>
+        ${discountInfo}
+    `;
     cartContainer.appendChild(totalLi);
 
     // Update badge and cart total in header
@@ -260,6 +285,34 @@ async function renderCartItems() {
     }
     if (cartTotalElement) {
         cartTotalElement.textContent = `$${total.toFixed(2)}`;
+    }
+}
+
+async function handleCheckout() {
+    try {
+        const response = await fetch('http://localhost:5183/api/orders/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("jwt_token")}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Checkout failed.');
+        }
+
+        const newOrder = await response.json();
+        console.log('Order placed successfully:', newOrder);
+        alert('Order placed successfully!');
+
+        // Re-render cart, which should now be empty
+        await renderCartItems();
+
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert(`Error during checkout: ${error.message}`);
     }
 }
 
@@ -278,5 +331,10 @@ document.addEventListener("DOMContentLoaded", () => {
               removeCartItem(cartItemId);
           }
       });
+  }
+
+  const checkoutButton = document.getElementById('checkout-btn');
+  if(checkoutButton) {
+      checkoutButton.addEventListener('click', handleCheckout);
   }
 })

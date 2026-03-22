@@ -173,31 +173,36 @@ async function getAllOrdersFromDB(){
       }
     })
     if(!response.ok) throw new Error("Error getting orders");
-    const responseData = await response.json();
-    return responseData;
+    // Return the full paginated response object
+    return await response.json();
   }catch(err){
-    console.log("Endpoint not ready: " + err);
+    console.error("Error fetching orders: " + err);
     return null;
   }
 }
 
 async function renderOrders() {
-    const orders = await getAllOrdersFromDB();
+    const response = await getAllOrdersFromDB();
     const ORDERS_TABLE_BODY = document.querySelector("#orders-table tbody");
 
-    if (!orders || !Array.isArray(orders)) return;
+    // The actual list of orders is in the 'data' property of the response
+    const orders = response?.data;
 
-    ORDERS_TABLE_BODY.innerHTML = "";
+    if (!orders || !Array.isArray(orders) || orders.length === 0) {
+        ORDERS_TABLE_BODY.innerHTML = '<tr><td colspan="6" class="text-center">No orders found.</td></tr>';
+        return;
+    }
 
-    for (let i = 0; i < orders.length; i++) {
-        const order = orders[i];
+    ORDERS_TABLE_BODY.innerHTML = ""; // Clear existing content, including the example row
+
+    for (const order of orders) {
         const row = `
             <tr>
                 <td>${order.orderId}</td>
-                <td>${order.user.userName}</td>
+                <td>${order.customerName}</td>
                 <td>${new Date(order.orderDate).toLocaleDateString()}</td>
                 <td>$${order.orderTotal.toFixed(2)}</td>
-                <td><span class="badge bg-info">${order.status}</span></td>
+                <td><span class="badge bg-info text-dark">${order.status}</span></td>
                 <td>
                     <button class="btn btn-sm btn-outline-secondary">Details</button>
                 </td>

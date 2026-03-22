@@ -1,88 +1,125 @@
-# Restaurant Application
+# FoodMart - Restaurant Application
 
-This is a full-stack web application for a fictional restaurant. It features a public-facing storefront for customers to browse products and a backend system for administrators to manage the menu. The project is intended as a portfolio piece to demonstrate skills in full-stack development with a C#/.NET backend and a static HTML/CSS/JS frontend.
+FoodMart is a comprehensive web application for managing a restaurant or food mart, featuring a robust .NET-based backend and an interactive web-based frontend.
 
-## Tech Stack
+## 🚀 Features
 
-*   **Backend:**
-    *   [C#](https://docs.microsoft.com/en-us/dotnet/csharp/)
-    *   [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/)
-    *   Minimal APIs
-    *   [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
-    *   JWT-based Authentication
-*   **Database:**
-    *   [MySQL](https://www.mysql.com/)
-*   **Frontend:**
-    *   HTML5
-    *   CSS3
-    *   JavaScript (with jQuery)
-    *   Bootstrap 5
+### **User Authentication**
+- JWT-based secure authentication.
+- User registration and login functionality.
+- Role-based access control (Admin and User).
+- Automatic Admin role assignment for the first registered user.
 
-## Project Structure
+### **Product Management**
+- Complete CRUD operations for products.
+- Products categorization and image support.
+- Admin-only endpoints for adding and modifying products.
 
-The project follows a standard ASP.NET Core structure with some key directories:
+### **Shopping Cart**
+- Persistent shopping cart for authenticated users.
+- Add, update, and remove items from the cart.
 
-```
-/
-│
-├─── Data/              # Contains the Entity Framework DbContext and migrations.
-├─── Models/            # Contains C# model classes (e.g., Product, User, Order).
-├─── Properties/        # Contains launch settings for development.
-├─── Routes/            # Contains API route definitions (e.g., AuthRoutes, ProductRoutes).
-├─── wwwroot/           # Contains all static frontend assets (HTML, CSS, JS, images).
-│
-├─── .gitignore         # Specifies intentionally untracked files to ignore.
-├─── appsettings.json   # Configuration settings for the application.
-├─── Program.cs         # The main entry point, configures services and middleware.
-├─── README.md          # This file.
-└─── Restaurant-Application.csproj # The C# project file, defines dependencies and properties.
-```
+### **Order Processing**
+- Secure checkout process.
+- Order history tracking.
+- Status updates for orders.
+- Email notifications upon order placement (using MailKit).
 
-## Getting Started
+### **Frontend**
+- Modern, responsive UI built with HTML, CSS, and jQuery.
+- Admin dashboard for product and user management.
+- Dynamic product listing and cart integration.
 
-Follow these instructions to get the project running on your local machine.
+---
 
-### Prerequisites
+## 🛠️ Tech Stack
 
-*   [.NET SDK](https://dotnet.microsoft.com/download) (Version 9.0 or later)
-*   [MySQL Server](https://dev.mysql.com/downloads/mysql/)
-*   A code editor (e.g., VS Code, Visual Studio)
+- **Backend:** ASP.NET Core 10.0 (Minimal APIs)
+- **Database:** MySQL (via Entity Framework Core & Pomelo provider)
+- **Authentication:** JWT (JSON Web Tokens)
+- **Email Service:** MailKit
+- **Frontend:** HTML5, CSS3, JavaScript (jQuery, Bootstrap)
+- **Containerization:** Docker & Docker Compose
+- **Documentation:** Swagger/OpenAPI
 
-### Installation & Running
+---
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
+- [MySQL Server](https://www.mysql.com/downloads/)
+- [Docker](https://www.docker.com/products/docker-desktop) (Optional, for containerized deployment)
+
+---
+
+## ⚙️ Setup and Installation
+
+### **Local Setup**
 
 1.  **Clone the repository:**
-    ```sh
+    ```bash
     git clone <repository-url>
     cd Restaurant-Application
     ```
 
-2.  **Configure the database connection:**
-    *   Open the `appsettings.json` file.
-    *   Modify the `DefaultConnection` string to point to your local MySQL instance and database.
-    *   The application will create the database and tables on first run if they don't exist.
+2.  **Configure the Database:**
+    Update the `DefaultConnection` string in `appsettings.json` with your MySQL server details.
+    ```json
+    "ConnectionStrings": {
+      "DefaultConnection": "Server=localhost;Port=3306;Database=FoodMart;Uid=root;Pwd=your_password;"
+    }
+    ```
 
-3.  **Restore dependencies and run the application:**
-    ```sh
+3.  **Configure Email Settings:**
+    Update the `EmailSettings` in `appsettings.json` with your SMTP credentials.
+
+4.  **Apply Migrations:**
+    ```bash
+    dotnet ef database update
+    ```
+
+5.  **Run the application:**
+    ```bash
     dotnet run
     ```
-    The .NET CLI will automatically restore dependencies. The application will start, and you can access it at the URL specified in the console output (e.g., `http://localhost:5183`).
+    The application will be available at `http://localhost:5000` (or the port configured in your environment).
 
-## API Endpoints
+### **Docker Setup**
 
-The application exposes a set of RESTful APIs for frontend interaction.
+To run the entire stack (App + MySQL) using Docker:
 
-### Authentication API (`/api/auth`)
+1.  **Run Docker Compose:**
+    ```bash
+    docker-compose up --build
+    ```
+    The application will be accessible at `http://localhost:5000`.
 
-*   **`POST /register`**: Creates a new user.
-    *   **Body:** `{ "email": "user@example.com", "passwordHash": "your_password", "userName": "your_username" }`
-*   **`POST /login`**: Authenticates a user and returns a JWT.
-    *   **Body:** `{ "email": "user@example.com", "passwordHash": "your_password" }`
-*   **`GET /verify`**: (Requires Authentication) Verifies the current user's token and returns their details (ID, email, role).
+---
 
-### Products API (`/api/products`)
+## 📂 Project Structure
 
-*   **`GET /`**: Retrieves a list of all products.
-*   **`GET /{id}`**: Retrieves a single product by its ID.
-*   **`POST /`**: (Requires Admin Authentication) Creates a new product.
-*   **`PUT /{id}`**: (Requires Admin Authentication) Updates an existing product.
-*   **`DELETE /{id}`**: (Requires Admin Authentication) Deletes a product.
+- `Program.cs`: Application entry point and service configuration.
+- `Models/`: Data entities (User, Product, Cart, Order, etc.).
+- `Routes/`: API endpoint definitions organized by module.
+- `Data/`: Database context and migrations.
+- `Middleware/`: Custom error handling and utility middlewares.
+- `Services/`: External service integrations (e.g., MailKit).
+- `wwwroot/`: Frontend static assets (HTML, JS, CSS, images).
+
+---
+
+## 📡 API Endpoints (Brief)
+
+- **Auth:** `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/verify`
+- **Products:** `GET /api/products`, `POST /api/products`, `PUT /api/products/{id}`, `DELETE /api/products/{id}`
+- **Cart:** `GET /api/cart`, `POST /api/cart/add`, `PUT /api/cart/update`, `DELETE /api/cart/item/{id}`
+- **Orders:** `POST /api/orders`, `GET /api/orders/user`, `GET /api/orders/all` (Admin)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+What would you like to work on next?

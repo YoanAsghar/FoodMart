@@ -19,29 +19,39 @@ namespace Restaurant_Application.Routes
                 {
                     var skip = (Page - 1) * PageSize;
 
+                    // Join Orders with Users to include customer information
+                    var ordersWithUsers = await db.Orders
+                        .Join(db.Users,
+                              order => order.UserId,
+                              user => user.Id,
+                              (order, user) => new
+                              {
+                                  OrderId = order.OrderId,
+                                  OrderDate = order.OrderDate,
+                                  OrderTotal = order.OrderTotal,
+                                  Status = order.Status,
+                                  CustomerName = user.Email
+                              })
+                        .OrderByDescending(o => o.OrderDate)
+                        .Skip(skip)
+                        .Take(PageSize)
+                        .ToListAsync();
 
-                    var Orders = await db.Orders
-                    .OrderBy(o => o.OrderId)
-                    .Skip(skip)
-                    .Take(PageSize)
-                    .ToListAsync();
+                    var totalOrders = await db.Orders.CountAsync();
 
-                    var TotalOrders = await db.Orders.CountAsync();
-
-                    var Response = new
+                    var response = new
                     {
-                        TotalOrders = TotalOrders,
-                        PagenNumber = Page,
+                        TotalOrders = totalOrders,
+                        PageNumber = Page,
                         PageSize = PageSize,
-                        Data = Orders
+                        Data = ordersWithUsers
                     };
 
-
-                    return Results.Ok(Response);
+                    return Results.Ok(response);
                 }
                 catch (Exception ex)
                 {
-                    return Results.Conflict(ex);
+                    return Results.Problem(ex.Message);
                 }
             }).RequireAuthorization("AdminOnly");
 
@@ -77,7 +87,7 @@ namespace Restaurant_Application.Routes
             }).RequireAuthorization();
 
             //Create a new order 
-            OrderRoutes.MapPost("/{id}", async (ApplicationDbContext db, ClaimsPrincipal user, [FromQuery] string? status) =>
+            OrderRoutes.MapPost("/", async (ApplicationDbContext db, ClaimsPrincipal user, List<Product> products) =>
             {
                 try
                 {
@@ -100,6 +110,62 @@ namespace Restaurant_Application.Routes
                     throw ex;
                 }
             }).RequireAuthorization("AdminOnly");
+
+            OrderRoutes.MapPost("/checkout", async (ApplicationDbContext db, ClaimsPrincipal user) =>
+            {
+                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                // 1. Find the user's cart with all its items and the related product details.
+                var cart = await db.Carts
+                    .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
+
+                if (cart == null || !cart.CartItems.Any())
+                {
+                    return Results.BadRequest("Your cart is empty.");
+                }
+
+                // 2. Create a new Order and populate it.
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.UtcNow,
+                    Status = "Pending", // Default status for a new order
+                    OrderDetails = new List<OrderDetail>()
+                };
+
+                // 3. Calculate total and create OrderDetail for each CartItem.
+                decimal orderTotal = 0;
+                foreach (var item in cart.CartItems)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = item.Product.Price // Lock the price at the time of purchase
+                    };
+                    order.OrderDetails.Add(orderDetail);
+                    orderTotal += item.Quantity * item.Product.Price;
+                }
+                order.OrderTotal = orderTotal;
+
+                // 4. Add the new order to the context.
+                db.Orders.Add(order);
+
+                // 5. Remove the cart. EF Core will handle deleting the associated CartItems due to the relationship.
+                db.Carts.Remove(cart);
+
+                // 6. Save all changes in a single transaction.
+                await db.SaveChangesAsync();
+
+                return Results.Ok(order);
+
+            }).RequireAuthorization();
         }
     }
 }
