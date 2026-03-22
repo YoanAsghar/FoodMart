@@ -108,4 +108,9 @@ OrderRoutes.MapOrderRoutes(app);
 CartRoutes.MapCartRoutes(app);
 UserRoutes.MapUserRoutes(app, builder.Configuration);
 
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "3000";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
+
 app.Run();
