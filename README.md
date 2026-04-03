@@ -1,4 +1,3 @@
-https://restaurantapplication-production-8d6b.up.railway.app/index.html
 
 # FoodMart - Restaurant Application
 
