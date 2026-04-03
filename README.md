@@ -122,3 +122,13 @@ To run the entire stack (App + MySQL) using Docker:
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+
+---
+
+##Execution
+
+
+https://github.com/user-attachments/assets/a6ca0567-67c3-448a-a3f0-9cd77fc32bc2
+
+
